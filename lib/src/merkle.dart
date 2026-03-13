@@ -75,8 +75,6 @@ class MerkleComputer {
 
   /// Columns to exclude from SELECT and hash computation entirely.
   /// row_hash: avoid circular dependency (hash including itself).
-  /// Array columns (e.g. triballeaders, subscribedto, participants): server
-  /// skips {:array, _} fields via is_array_field?, client must match.
   final List<String> skipColumns;
 
   MerkleComputer(this._db, {
