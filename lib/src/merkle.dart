@@ -67,8 +67,10 @@ abstract class MerkleDatabase {
 class MerkleComputer {
   final MerkleDatabase _db;
 
-  /// Columns that store JSONB binary data and need json() wrapper in queries.
-  /// These are converted to text JSON before hashing for cross-platform consistency.
+  /// Columns that store JSONB binary data and need json() wrapper in SQL queries.
+  /// The json() wrapper converts SQLite's binary JSONB storage to text JSON.
+  /// These columns ARE included in the hash — the C library recursively sorts
+  /// JSON keys for cross-platform consistency.
   final List<String> jsonbColumns;
 
   /// Columns to exclude from SELECT and hash computation entirely.
@@ -244,13 +246,16 @@ class MerkleComputer {
   // ==========================================================================
 
   /// Build sorted JSON from a row map.
-  /// Keys are sorted alphabetically. JSONB columns are skipped.
+  /// Keys are sorted alphabetically. Only [skipColumns] are excluded.
+  /// JSONB columns (e.g. document) ARE included — the C library recursively
+  /// sorts JSON keys, ensuring cross-platform consistency.
   /// Uses WASM on web for cross-platform consistency (SINGLE SOURCE OF TRUTH).
   String buildSortedJson(Map<String, dynamic> row) {
     if (_useWasm) {
       // Use WASM for cross-platform consistency
+      // Only skip infrastructure columns (row_hash), not JSONB columns
       final inputJson = jsonEncode(row);
-      return wasmBuildSortedJsonFromJson(inputJson, jsonbColumns);
+      return wasmBuildSortedJsonFromJson(inputJson, const []);
     }
 
     // Fallback to pure Dart for native platforms or when WASM not initialized
@@ -264,7 +269,6 @@ class MerkleComputer {
     final parts = <String>[];
 
     for (final key in sortedKeys) {
-      if (jsonbColumns.contains(key)) continue;
       if (skipColumns.contains(key)) continue;
 
       final value = row[key];
