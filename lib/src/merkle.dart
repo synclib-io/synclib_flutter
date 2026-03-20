@@ -346,34 +346,29 @@ class MerkleComputer {
         ? "AND $primaryKeyColumn IN (${scopedRowIds.map((id) => "'$id'").join(',')})"
         : '';
 
-    // Fast path: try precomputed row_hash values.
-    // When synclib_set_hash_columns() has been called, the precomputed row_hash
-    // uses the same column subset as the server, so fast path is valid.
+    // Fast path: use stored row_hash values (server-authoritative).
+    // All rows are included — COALESCE ensures NULL becomes '' sentinel.
+    // Sentinel values produce different block hashes than server → merkle detects → repair.
     try {
       final precomputed = await _db.read(
-        'SELECT row_hash FROM $tableName '
-        'WHERE deleted_at IS NULL AND row_hash IS NOT NULL $scopeFilter '
+        'SELECT COALESCE(row_hash, \'\') as row_hash FROM $tableName '
+        'WHERE deleted_at IS NULL $scopeFilter '
         'ORDER BY $primaryKeyColumn LIMIT $blockSize OFFSET $offset',
       );
 
       if (precomputed.isNotEmpty) {
         final rowHashes = precomputed
-            .map((r) => r['row_hash'] as String?)
-            .where((h) => h != null && h.isNotEmpty)
-            .cast<String>()
+            .map((r) => (r['row_hash'] as String?) ?? '')
             .toList();
 
-        if (rowHashes.length == precomputed.length) {
-          // All rows have precomputed hashes
-          String blockHashValue;
-          if (_useWasm) {
-            blockHashValue = wasmBlockHash(rowHashes);
-          } else {
-            blockHashValue = _sha256Hex(rowHashes.join(''));
-          }
-          return BlockHashResult(
-              hash: blockHashValue, rowCount: rowHashes.length);
+        String blockHashValue;
+        if (_useWasm) {
+          blockHashValue = wasmBlockHash(rowHashes);
+        } else {
+          blockHashValue = _sha256Hex(rowHashes.join(''));
         }
+        return BlockHashResult(
+            hash: blockHashValue, rowCount: rowHashes.length);
       }
     } catch (_) {
       // Column might not exist yet - fall through to slow path
