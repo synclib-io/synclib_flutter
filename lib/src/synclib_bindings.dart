@@ -140,6 +140,15 @@ typedef SynclibSetSchemaVersionDart = int Function(
   int version,
 );
 
+typedef SynclibSetSkipLocalHashNative = Int32 Function(
+  Pointer<SynclibDb> db,
+  Int32 skip,
+);
+typedef SynclibSetSkipLocalHashDart = int Function(
+  Pointer<SynclibDb> db,
+  int skip,
+);
+
 typedef SynclibGetPendingChangesNative = Int32 Function(
   Pointer<SynclibDb> db,
   Pointer<Pointer<SynclibChange>> changes,
@@ -553,6 +562,11 @@ class SynclibBindings {
   late final SynclibSetSchemaVersionDart setSchemaVersion = _lib
       .lookup<NativeFunction<SynclibSetSchemaVersionNative>>(
           'synclib_set_schema_version')
+      .asFunction();
+
+  late final SynclibSetSkipLocalHashDart setSkipLocalHash = _lib
+      .lookup<NativeFunction<SynclibSetSkipLocalHashNative>>(
+          'synclib_set_skip_local_hash')
       .asFunction();
 
   late final SynclibGetPendingChangesDart getPendingChanges = _lib

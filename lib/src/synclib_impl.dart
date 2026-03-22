@@ -378,6 +378,17 @@ class SynclibDatabase {
     }
   }
 
+  /// Skip local row_hash computation (server-authoritative mode)
+  Future<void> skipLocalHash(bool skip) async {
+    _ensureOpen();
+
+    final result = _bindings.setSkipLocalHash(_db!, skip ? 1 : 0);
+    if (result != synclibOk) {
+      throw SynclibException(
+          'Failed to set skip local hash: ${_getLastError()}', result);
+    }
+  }
+
   /// Get pending changes that need to be synced
   Future<List<Change>> getPendingChanges({int limit = 100}) async {
     _ensureOpen();

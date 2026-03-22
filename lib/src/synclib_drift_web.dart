@@ -275,6 +275,9 @@ class SynclibDatabase implements MerkleDatabase {
     }
   }
 
+  /// No-op on web — skip_local_hash is native-only
+  Future<void> skipLocalHash(bool skip) async {}
+
   /// No-op on web — row_hash precomputation is native-only
   Future<void> updateRowHash(String tableName, String rowId) async {}
 

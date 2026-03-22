@@ -93,6 +93,10 @@ class SynclibDatabase {
     throw UnsupportedError('Platform not supported');
   }
 
+  Future<void> skipLocalHash(bool skip) {
+    throw UnsupportedError('Platform not supported');
+  }
+
   Future<List<Change>> getPendingChanges({int limit = 100}) {
     throw UnsupportedError('Platform not supported');
   }
