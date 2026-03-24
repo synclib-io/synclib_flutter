@@ -555,6 +555,17 @@ class MerkleComputer {
     return rows.map((row) => row[primaryKeyColumn].toString()).toList();
   }
 
+  /// Get all row IDs for a table (excluding soft-deleted).
+  Future<List<String>> getAllRowIds(
+    String tableName, {
+    String primaryKeyColumn = 'id',
+  }) async {
+    final rows = await _db.read(
+      'SELECT $primaryKeyColumn FROM $tableName WHERE deleted_at IS NULL ORDER BY $primaryKeyColumn',
+    );
+    return rows.map((row) => row[primaryKeyColumn].toString()).toList();
+  }
+
   /// Compare Merkle roots between local and remote.
   Future<bool> compareRoots(
     String tableName,
