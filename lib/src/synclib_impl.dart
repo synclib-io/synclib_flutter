@@ -1083,12 +1083,9 @@ class SynclibDatabase {
               }
             }
           } catch (e) {
-            // Handle UTF-8 decode errors (e.g., JSONB binary data)
-            // This happens when trying to read JSONB columns without json() wrapper
-            // Use readRaw() for queries that need to handle BLOB/JSONB data,
-            // or wrap JSONB columns with json() in your SQL query
-            print('Warning: Column $colName contains binary data that cannot be read as text. '
-                  'Use json(column_name) in your SQL query or use readRaw() instead.');
+            // JSONB binary data can't be decoded as UTF-8 text — expected for
+            // document columns when using SELECT *. Set to null; callers should
+            // use json(column) alias or readRaw() to access JSONB data.
             row[colName] = null;
           }
         }
