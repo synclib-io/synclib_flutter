@@ -557,6 +557,18 @@ void synclib_free_merkle_info(synclib_merkle_info_t* info);
 void synclib_free_string_array(char** strings, int count);
 
 /**
+ * Skip local row_hash computation on writes (server-authoritative mode).
+ * When enabled, update_row_hash() is not called during write/apply_remote.
+ * Explicit calls to synclib_update_row_hash() and synclib_backfill_row_hashes()
+ * are NOT affected.
+ *
+ * @param db Database handle
+ * @param skip Non-zero to skip, zero to re-enable
+ * @return SYNCLIB_OK on success, SYNCLIB_ERROR on failure
+ */
+int synclib_set_skip_local_hash(synclib_db_t* db, int skip);
+
+/**
  * Recompute and store row_hash for a single row
  *
  * Call this after bulk remote writes to keep precomputed hashes current.
